@@ -1,9 +1,15 @@
 package com.intermodular.intro_backend;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -16,6 +22,13 @@ public class Nurse {
     private String lastName;
     private String email;
     private String password;
+    @ManyToMany
+    @JoinTable(
+        name = "Registers_has_Nurses",
+        joinColumns = @JoinColumn(name = "Nurses_id"), 
+        inverseJoinColumns = @JoinColumn(name = "Registers_id") 
+    )
+    private Set<Register> registers = new HashSet<>();
 
     public Nurse(String name, String lastName, String email, String password) {
         this.name = name;
@@ -23,7 +36,10 @@ public class Nurse {
         this.email = email;
         this.password = password;
     }
-
+    
+    public Nurse() {
+    }
+    
     public int getId() {
         return id;
     }
