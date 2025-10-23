@@ -1,17 +1,13 @@
 package com.intermodular.intro_backend;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,51 +21,20 @@ import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/nurse")
+
 public class NurseController {
 
-    private static final String NURSE_JSON_PATH = "src/main/resources/data/nurse.json";
+    @Autowired
+    private NurseRepository nurseRepository;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    private JSONArray getListNurses() {
-        try {
-            String content = new String(Files.readAllBytes(Paths.get(NURSE_JSON_PATH)));
-            return new JSONArray(content);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new JSONArray();
-        }
-    }
-
-    private void saveAllNurses(JSONArray nurses) throws IOException {
-        Files.writeString(Paths.get(NURSE_JSON_PATH), nurses.toString(2));
-    }
-
-    private boolean existsById(int id) throws IOException {
-        JSONArray nurses = getListNurses();
-        for (int i = 0; i < nurses.length(); i++) {
-            if (nurses.getJSONObject(i).getInt("nurse_id") == id) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean existsByEmail(String email) throws IOException {
-        JSONArray nurses = getListNurses();
-        for (int i = 0; i < nurses.length(); i++) {
-            if (nurses.getJSONObject(i).getString("email").equalsIgnoreCase(email)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerNurse(@RequestBody NurseRegisterRequest request) {
+        Map<String, String> response = new HashMap<>();
         try {
-            Map<String, String> response = new HashMap<>();
             if (existsById(request.nurse_id())) {
                 response.put("error", "El id ya existe");
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
@@ -79,18 +44,15 @@ public class NurseController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             }
 
-            JSONObject newNurse = new JSONObject();
-            newNurse.put("nurse_id", request.nurse_id());
-            newNurse.put("first_name", request.first_name());
-            newNurse.put("last_name", request.last_name());
-            newNurse.put("email", request.email());
-            newNurse.put("password", passwordEncoder.encode(request.password()));
+            Nurse newNurse = new Nurse(
+                    request.nurse_id(),
+                    request.first_name(),
+                    request.last_name(),
+                    request.email(),
+                    passwordEncoder.encode(request.password()));
 
-            JSONArray nurses = getListNurses();
-            nurses.put(newNurse);
-            saveAllNurses(nurses);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(newNurse.toMap());
+            nurseRepository.save(newNurse);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toMap(newNurse));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno: " + e.getMessage());
@@ -103,15 +65,14 @@ public class NurseController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Boolean>> login(@RequestBody Map<String, String> body, HttpSession session) {
-        JSONArray listNurses = getListNurses();
+        List<Nurse> nurses = nurseRepository.findAll();
         String firstName = body.get("first_name");
         String password = body.get("password");
         boolean authenticated = false;
 
-        for (int i = 0; i < listNurses.length(); i++) {
-            JSONObject nurse = listNurses.getJSONObject(i);
-            if (nurse.getString("first_name").equalsIgnoreCase(firstName) &&
-                    passwordEncoder.matches(password, nurse.getString("password"))) {
+        for (Nurse nurse : nurses) {
+            if (nurse.getFirstName().equalsIgnoreCase(firstName) &&
+                    passwordEncoder.matches(password, nurse.getPassword())) {
                 authenticated = true;
                 session.setAttribute("user", firstName);
                 break;
@@ -130,18 +91,38 @@ public class NurseController {
 
     @GetMapping("/index")
     public ResponseEntity<List<Object>> getAllNurses() {
-        return ResponseEntity.ok(getListNurses().toList());
+        List<Nurse> nurses = nurseRepository.findAll();
+        List<Object> result = nurses.stream().map(this::toMap).collect(Collectors.toList());
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/name/{name}")
     public ResponseEntity<Map<String, Object>> findByName(@PathVariable String name) {
-        JSONArray nurses = getListNurses();
-        for (int i = 0; i < nurses.length(); i++) {
-            JSONObject n = nurses.getJSONObject(i);
-            if (n.getString("first_name").equalsIgnoreCase(name)) {
-                return ResponseEntity.ok(n.toMap());
+        List<Nurse> nurses = nurseRepository.findAll();
+        for (Nurse n : nurses) {
+            if (n.getFirstName().equalsIgnoreCase(name)) {
+                return ResponseEntity.ok(toMap(n));
             }
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private boolean existsById(int id) {
+        return nurseRepository.findById(id).isPresent();
+    }
+
+    private boolean existsByEmail(String email) {
+        return nurseRepository.findAll().stream()
+                .anyMatch(n -> n.getEmail().equalsIgnoreCase(email));
+    }
+
+    private Map<String, Object> toMap(Nurse nurse) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("nurse_id", nurse.getId());
+    map.put("first_name", nurse.getFirstName());
+        map.put("last_name", nurse.getLastName());
+        map.put("email", nurse.getEmail());
+        map.put("password", nurse.getPassword());
+        return map;
     }
 }
