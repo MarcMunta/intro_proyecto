@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.intermodular.intro_backend.entity.NurseEntity;
+import com.intermodular.intro_backend.Nurse;
 import com.intermodular.intro_backend.repository.NurseRepository;
 
 @Component
@@ -44,7 +44,7 @@ public class NurseDataInitializer implements CommandLineRunner {
             }
 
             try (InputStream inputStream = resource.getInputStream()) {
-                List<NurseEntity> nurses = objectMapper.readValue(inputStream, new TypeReference<List<NurseEntity>>(){});
+                List<Nurse> nurses = objectMapper.readValue(inputStream, new TypeReference<List<Nurse>>(){});
                 nurseRepository.saveAll(nurses);
                 log.info("Imported {} nurses from {}", nurses.size(), NURSE_RESOURCE);
             }
