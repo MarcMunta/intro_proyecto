@@ -1,14 +1,23 @@
 package com.intermodular.intro_backend;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "Nurses")
 public class Nurse {
+    @Id 
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
     private int id;
     private String name;
     private String lastName;
     private String email;
     private String password;
 
-    public Nurse(int id, String name, String lastName, String email, String password) {
-        this.id = id;
+    public Nurse(String name, String lastName, String email, String password) {
         this.name = name;
         this.lastName = lastName;
         this.email = email;
