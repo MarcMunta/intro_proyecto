@@ -45,6 +45,7 @@ public class NurseDataInitializer implements CommandLineRunner {
 
             try (InputStream inputStream = resource.getInputStream()) {
                 List<Nurse> nurses = objectMapper.readValue(inputStream, new TypeReference<List<Nurse>>(){});
+                nurses.forEach(n -> n.setId(null));
                 nurseRepository.saveAll(nurses);
                 log.info("Imported {} nurses from {}", nurses.size(), NURSE_RESOURCE);
             }
