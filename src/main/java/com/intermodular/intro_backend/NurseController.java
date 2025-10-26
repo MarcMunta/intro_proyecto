@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.intermodular.intro_backend.repository.NurseRepository;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +27,15 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/nurse")
 public class NurseController {
 
-    private static final String NURSE_JSON_PATH = "src/main/resources/data/nurse.json";
+    /*private static final String NURSE_JSON_PATH = "src/main/resources/data/nurse.json";*/
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    private JSONArray getListNurses() {
+    @Autowired
+    private NurseRepository nurseRepository;
+
+    /*private JSONArray getListNurses() {
         try {
             String content = new String(Files.readAllBytes(Paths.get(NURSE_JSON_PATH)));
             return new JSONArray(content);
@@ -43,9 +47,9 @@ public class NurseController {
 
     private void saveAllNurses(JSONArray nurses) throws IOException {
         Files.writeString(Paths.get(NURSE_JSON_PATH), nurses.toString(2));
-    }
+    }*/
 
-    private boolean existsById(int id) throws IOException {
+    /*private boolean existsById(int id) throws IOException {
         JSONArray nurses = getListNurses();
         for (int i = 0; i < nurses.length(); i++) {
             if (nurses.getJSONObject(i).getInt("nurse_id") == id) {
@@ -53,9 +57,9 @@ public class NurseController {
             }
         }
         return false;
-    }
+    }*/
 
-    private boolean existsByEmail(String email) throws IOException {
+    /*private boolean existsByEmail(String email) throws IOException {
         JSONArray nurses = getListNurses();
         for (int i = 0; i < nurses.length(); i++) {
             if (nurses.getJSONObject(i).getString("email").equalsIgnoreCase(email)) {
@@ -63,9 +67,9 @@ public class NurseController {
             }
         }
         return false;
-    }
+    }*/
 
-    @PostMapping("/register")
+    /*@PostMapping("/register")
     public ResponseEntity<?> registerNurse(@RequestBody NurseRegisterRequest request) {
         try {
             Map<String, String> response = new HashMap<>();
@@ -125,14 +129,14 @@ public class NurseController {
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
-    }
+    }*/
 
     @GetMapping("/index")
-    public ResponseEntity<List<Object>> getAllNurses() {
-        return ResponseEntity.ok(getListNurses().toList());
+    public ResponseEntity<List<Nurse>> getAllNurses() {
+        return ResponseEntity.ok(nurseRepository.findAll());
     }
 
-    @GetMapping("/name/{name}")
+    /*@GetMapping("/name/{name}")
     public ResponseEntity<Map<String, Object>> findByName(@PathVariable String name) {
         JSONArray nurses = getListNurses();
         for (int i = 0; i < nurses.length(); i++) {
@@ -142,5 +146,5 @@ public class NurseController {
             }
         }
         return ResponseEntity.notFound().build();
-    }
+    }*/
 }
