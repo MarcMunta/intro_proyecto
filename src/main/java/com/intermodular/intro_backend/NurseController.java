@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.intermodular.intro_backend.repository.NurseRepository;
+
 import jakarta.servlet.http.HttpSession;
 
 @RestController
@@ -30,6 +32,9 @@ public class NurseController {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private NurseRepository nurseRepository;
 
     private JSONArray getListNurses() {
         try {
@@ -134,13 +139,16 @@ public class NurseController {
 
     @GetMapping("/name/{name}")
     public ResponseEntity<Map<String, Object>> findByName(@PathVariable String name) {
-        JSONArray nurses = getListNurses();
-        for (int i = 0; i < nurses.length(); i++) {
-            JSONObject n = nurses.getJSONObject(i);
-            if (n.getString("first_name").equalsIgnoreCase(name)) {
-                return ResponseEntity.ok(n.toMap());
-            }
-        }
-        return ResponseEntity.notFound().build();
+        return nurseRepository.findByFirstNameIgnoreCase(name)
+                .map(nurse -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("nurse_id", nurse.getId());
+                    result.put("first_name", nurse.getName());
+                    result.put("last_name", nurse.getLastName());
+                    result.put("email", nurse.getEmail());
+                    result.put("password", nurse.getPassword());
+                    return ResponseEntity.ok(result);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
