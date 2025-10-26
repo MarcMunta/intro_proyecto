@@ -11,4 +11,5 @@ import com.intermodular.intro_backend.Nurse;
 public interface NurseRepository extends JpaRepository<Nurse, Integer> {
     boolean existsByEmailIgnoreCase(String email);
     Optional<Nurse> findByFirstNameIgnoreCase(String firstName);
+    Nurse findByEmail(String email);
 }

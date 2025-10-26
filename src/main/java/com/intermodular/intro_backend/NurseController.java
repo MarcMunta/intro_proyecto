@@ -1,24 +1,20 @@
 package com.intermodular.intro_backend;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.intermodular.intro_backend.repository.NurseRepository;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -26,12 +22,15 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/nurse")
 public class NurseController {
 
-    private static final String NURSE_JSON_PATH = "src/main/resources/data/nurse.json";
+    /*private static final String NURSE_JSON_PATH = "src/main/resources/data/nurse.json";*/
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    private JSONArray getListNurses() {
+    @Autowired
+    private NurseRepository nurseRepository;
+
+    /*private JSONArray getListNurses() {
         try {
             String content = new String(Files.readAllBytes(Paths.get(NURSE_JSON_PATH)));
             return new JSONArray(content);
@@ -43,9 +42,9 @@ public class NurseController {
 
     private void saveAllNurses(JSONArray nurses) throws IOException {
         Files.writeString(Paths.get(NURSE_JSON_PATH), nurses.toString(2));
-    }
+    }*/
 
-    private boolean existsById(int id) throws IOException {
+    /*private boolean existsById(int id) throws IOException {
         JSONArray nurses = getListNurses();
         for (int i = 0; i < nurses.length(); i++) {
             if (nurses.getJSONObject(i).getInt("nurse_id") == id) {
@@ -53,9 +52,9 @@ public class NurseController {
             }
         }
         return false;
-    }
+    }*/
 
-    private boolean existsByEmail(String email) throws IOException {
+    /*private boolean existsByEmail(String email) throws IOException {
         JSONArray nurses = getListNurses();
         for (int i = 0; i < nurses.length(); i++) {
             if (nurses.getJSONObject(i).getString("email").equalsIgnoreCase(email)) {
@@ -63,9 +62,9 @@ public class NurseController {
             }
         }
         return false;
-    }
+    }*/
 
-    @PostMapping("/register")
+    /*@PostMapping("/register")
     public ResponseEntity<?> registerNurse(@RequestBody NurseRegisterRequest request) {
         try {
             Map<String, String> response = new HashMap<>();
@@ -98,22 +97,20 @@ public class NurseController {
 
     public record NurseRegisterRequest(int nurse_id, String first_name, String last_name, String email,
             String password) {
-    }
+    } */
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Boolean>> login(@RequestBody Map<String, String> body, HttpSession session) {
-        JSONArray listNurses = getListNurses();
-        String firstName = body.get("first_name");
+        String email = body.get("email");
         String password = body.get("password");
         boolean authenticated = false;
 
-        for (int i = 0; i < listNurses.length(); i++) {
-            JSONObject nurse = listNurses.getJSONObject(i);
-            if (nurse.getString("first_name").equalsIgnoreCase(firstName) &&
-                    passwordEncoder.matches(password, nurse.getString("password"))) {
+        Nurse nurse = nurseRepository.findByEmail(email);
+
+        if (nurse != null) {
+            if (passwordEncoder.matches(password, nurse.getPassword())) {
                 authenticated = true;
-                session.setAttribute("user", firstName);
-                break;
+                session.setAttribute("user", nurse.getFirstName());
             }
         }
 
@@ -128,11 +125,11 @@ public class NurseController {
     }
 
     @GetMapping("/index")
-    public ResponseEntity<List<Object>> getAllNurses() {
-        return ResponseEntity.ok(getListNurses().toList());
+    public ResponseEntity<List<Nurse>> getAllNurses() {
+        return ResponseEntity.ok(nurseRepository.findAll());
     }
 
-    @GetMapping("/name/{name}")
+    /*@GetMapping("/name/{name}")
     public ResponseEntity<Map<String, Object>> findByName(@PathVariable String name) {
         JSONArray nurses = getListNurses();
         for (int i = 0; i < nurses.length(); i++) {
@@ -142,5 +139,5 @@ public class NurseController {
             }
         }
         return ResponseEntity.notFound().build();
-    }
+    }*/
 }
