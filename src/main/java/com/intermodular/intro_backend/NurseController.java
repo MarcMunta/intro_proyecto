@@ -1,8 +1,5 @@
 package com.intermodular.intro_backend;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.intermodular.intro_backend.repository.NurseRepository;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -102,22 +100,20 @@ public class NurseController {
 
     public record NurseRegisterRequest(int nurse_id, String first_name, String last_name, String email,
             String password) {
-    }
+    } */
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Boolean>> login(@RequestBody Map<String, String> body, HttpSession session) {
-        JSONArray listNurses = getListNurses();
-        String firstName = body.get("first_name");
+        String email = body.get("email");
         String password = body.get("password");
         boolean authenticated = false;
 
-        for (int i = 0; i < listNurses.length(); i++) {
-            JSONObject nurse = listNurses.getJSONObject(i);
-            if (nurse.getString("first_name").equalsIgnoreCase(firstName) &&
-                    passwordEncoder.matches(password, nurse.getString("password"))) {
+        Nurse nurse = nurseRepository.findByEmail(email);
+
+        if (nurse != null) {
+            if (passwordEncoder.matches(password, nurse.getPassword())) {
                 authenticated = true;
-                session.setAttribute("user", firstName);
-                break;
+                session.setAttribute("user", nurse.getFirstName());
             }
         }
 
