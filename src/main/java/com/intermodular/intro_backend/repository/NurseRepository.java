@@ -12,4 +12,5 @@ public interface NurseRepository extends JpaRepository<Nurse, Integer> {
     boolean existsByEmailIgnoreCase(String email);
     Optional<Nurse> findByFirstNameIgnoreCase(String firstName);
     Nurse findByEmail(String email);
+    Optional<Nurse> findById(int id);
 }

@@ -130,9 +130,9 @@ public class NurseController {
         return ResponseEntity.ok(nurseRepository.findAll());
     }
 
-    @GetMapping("/name/{name}")
-    public ResponseEntity<Map<String, Object>> findByName(@PathVariable String name) {
-        return nurseRepository.findByFirstNameIgnoreCase(name)
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> readNurse(@PathVariable int id) {
+        return nurseRepository.findById(id)
                 .map(nurse -> {
                     Map<String, Object> result = new HashMap<>();
                     result.put("nurse_id", nurse.getId());
