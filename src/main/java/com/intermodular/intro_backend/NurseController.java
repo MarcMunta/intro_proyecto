@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -143,5 +144,19 @@ public class NurseController {
                     return ResponseEntity.ok(result);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteNurse(@PathVariable Integer id) {
+        Map<String, String> response = new HashMap<>();
+
+        if (!nurseRepository.existsById(id)) {
+            response.put("Error", "Nurse not found with id " + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        
+        nurseRepository.deleteById(id);
+        response.put("Success", "Nurse successfuly deleted with id " + id);
+        return ResponseEntity.ok(response);
     }
 }
