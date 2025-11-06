@@ -3,17 +3,16 @@ package com.intermodular.intro_backend;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.intermodular.intro_backend.repository.NurseRepository;
 
@@ -23,47 +22,13 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/nurse")
 public class NurseController {
 
-    /*private static final String NURSE_JSON_PATH = "src/main/resources/data/nurse.json";*/
-
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
     private NurseRepository nurseRepository;
 
-    /*private JSONArray getListNurses() {
-        try {
-            String content = new String(Files.readAllBytes(Paths.get(NURSE_JSON_PATH)));
-            return new JSONArray(content);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new JSONArray();
-        }
-    }
 
-    private void saveAllNurses(JSONArray nurses) throws IOException {
-        Files.writeString(Paths.get(NURSE_JSON_PATH), nurses.toString(2));
-    }*/
-
-    /*private boolean existsById(int id) throws IOException {
-        JSONArray nurses = getListNurses();
-        for (int i = 0; i < nurses.length(); i++) {
-            if (nurses.getJSONObject(i).getInt("nurse_id") == id) {
-                return true;
-            }
-        }
-        return false;
-    }*/
-
-    /*private boolean existsByEmail(String email) throws IOException {
-        JSONArray nurses = getListNurses();
-        for (int i = 0; i < nurses.length(); i++) {
-            if (nurses.getJSONObject(i).getString("email").equalsIgnoreCase(email)) {
-                return true;
-            }
-        }
-        return false;
-    }*/
 
     /*@PostMapping("/register")
     public ResponseEntity<?> registerNurse(@RequestBody NurseRegisterRequest request) {
@@ -144,4 +109,51 @@ public class NurseController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, String>> updateNurse(@PathVariable int id,@RequestBody Nurse newNurse) {
+        Map<String, String> response = new HashMap<>();
+        Optional<Nurse> oldNurse = nurseRepository.findById(id);
+
+        if(oldNurse.isEmpty()){
+            response.put("Error", "Nurse not found with id " +id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+            if(!validateEmail(newNurse.getEmail())){
+                response.put("Error", "Invalid parameters. Email must contain '@' and a valid domain (e.g., user@example.com).");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            if(!validatePassword(newNurse.getPassword())){
+                response.put("Error", "Invalid parameters. Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+                oldNurse.get().setFirstName(newNurse.getFirstName());
+                oldNurse.get().setLastName(newNurse.getLastName());
+                oldNurse.get().setEmail(newNurse.getEmail());
+                oldNurse.get().setPassword(newNurse.getPassword());
+
+            nurseRepository.save(oldNurse.get());
+            response.put("Success", "Nurse with id: "+id +" successfully updated");
+            return ResponseEntity.ok().body(response);
+
+
+
+
+    }
+
+    //VALIDATIONS
+
+    public boolean validateEmail(String email){
+        String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        return email.matches(regex);
+    }
+
+    public boolean validatePassword(String password){
+        String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+        return password.matches(regex);
+    }
+
 }
