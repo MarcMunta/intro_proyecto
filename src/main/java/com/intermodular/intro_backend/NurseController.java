@@ -47,6 +47,16 @@ public class NurseController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             }
 
+            if (!validateEmail(request.email())) {
+                response.put("Error", "Invalid parameters. Email must contain '@' and a valid domain (e.g., user@example.com).");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            if (!validatePassword(request.password())) {
+                response.put("Error", "Invalid parameters. Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
             Nurse newNurse = new Nurse();
             newNurse.setFirstName(request.first_name());
             newNurse.setLastName(request.last_name());
@@ -121,30 +131,31 @@ public class NurseController {
         Map<String, String> response = new HashMap<>();
         Optional<Nurse> oldNurse = nurseRepository.findById(id);
 
-        if(oldNurse.isEmpty()){
-            response.put("Error", "Nurse not found with id " +id);
+        if (oldNurse.isEmpty()) {
+            response.put("Error", "Nurse not found with id " + id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
-            if(!validateEmail(newNurse.getEmail())){
-                response.put("Error", "Invalid parameters. Email must contain '@' and a valid domain (e.g., user@example.com).");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+        if (!validateEmail(newNurse.getEmail())) {
+            response.put("Error", "Invalid parameters. Email must contain '@' and a valid domain (e.g., user@example.com).");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
-            if(!validatePassword(newNurse.getPassword())){
-                response.put("Error", "Invalid parameters. Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+        if (!validatePassword(newNurse.getPassword())) {
+            response.put("Error", "Invalid parameters. Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
-                oldNurse.get().setFirstName(newNurse.getFirstName());
-                oldNurse.get().setLastName(newNurse.getLastName());
-                oldNurse.get().setEmail(newNurse.getEmail());
-                oldNurse.get().setPassword(newNurse.getPassword());
+        oldNurse.get().setFirstName(newNurse.getFirstName());
+        oldNurse.get().setLastName(newNurse.getLastName());
+        oldNurse.get().setEmail(newNurse.getEmail());
+        oldNurse.get().setPassword(newNurse.getPassword());
 
-            nurseRepository.save(oldNurse.get());
-            response.put("Success", "Nurse with id: "+id +" successfully updated");
-            return ResponseEntity.ok().body(response);
+        nurseRepository.save(oldNurse.get());
+        response.put("Success", "Nurse with id: " + id + " successfully updated");
+        return ResponseEntity.ok().body(response);
 
+    }
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteNurse(@PathVariable Integer id) {
         Map<String, String> response = new HashMap<>();
@@ -160,7 +171,7 @@ public class NurseController {
     }
 
 
-    }
+
 
     //VALIDATIONS
 
