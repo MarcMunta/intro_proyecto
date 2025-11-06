@@ -13,6 +13,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.intermodular.intro_backend.repository.NurseRepository;
 
@@ -30,40 +37,39 @@ public class NurseController {
 
 
 
-    /*@PostMapping("/register")
+    @PostMapping("/register")
     public ResponseEntity<?> registerNurse(@RequestBody NurseRegisterRequest request) {
         try {
             Map<String, String> response = new HashMap<>();
-            if (existsById(request.nurse_id())) {
-                response.put("error", "El id ya existe");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-            }
-            if (existsByEmail(request.email())) {
+            
+            if (nurseRepository.existsByEmailIgnoreCase(request.email())) {
                 response.put("error", "El email ya existe");
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             }
 
-            JSONObject newNurse = new JSONObject();
-            newNurse.put("nurse_id", request.nurse_id());
-            newNurse.put("first_name", request.first_name());
-            newNurse.put("last_name", request.last_name());
-            newNurse.put("email", request.email());
-            newNurse.put("password", passwordEncoder.encode(request.password()));
+            Nurse newNurse = new Nurse();
+            newNurse.setFirstName(request.first_name());
+            newNurse.setLastName(request.last_name());
+            newNurse.setEmail(request.email());
+            newNurse.setPassword(passwordEncoder.encode(request.password()));
 
-            JSONArray nurses = getListNurses();
-            nurses.put(newNurse);
-            saveAllNurses(nurses);
+            Nurse savedNurse = nurseRepository.save(newNurse);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(newNurse.toMap());
+            Map<String, Object> nurseResponse = new HashMap<>();
+            nurseResponse.put("nurse_id", savedNurse.getId());
+            nurseResponse.put("first_name", savedNurse.getFirstName());
+            nurseResponse.put("last_name", savedNurse.getLastName());
+            nurseResponse.put("email", savedNurse.getEmail());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(nurseResponse);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno: " + e.getMessage());
         }
     }
 
-    public record NurseRegisterRequest(int nurse_id, String first_name, String last_name, String email,
-            String password) {
-    } */
+    public record NurseRegisterRequest(String first_name, String last_name, String email, String password) {
+    }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Boolean>> login(@RequestBody Map<String, String> body, HttpSession session) {
@@ -139,7 +145,19 @@ public class NurseController {
             response.put("Success", "Nurse with id: "+id +" successfully updated");
             return ResponseEntity.ok().body(response);
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteNurse(@PathVariable Integer id) {
+        Map<String, String> response = new HashMap<>();
 
+        if (!nurseRepository.existsById(id)) {
+            response.put("Error", "Nurse not found with id " + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        
+        nurseRepository.deleteById(id);
+        response.put("Success", "Nurse successfuly deleted with id " + id);
+        return ResponseEntity.ok(response);
+    }
 
 
     }
@@ -155,5 +173,6 @@ public class NurseController {
         String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
         return password.matches(regex);
     }
+
 
 }
