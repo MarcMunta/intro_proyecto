@@ -22,11 +22,11 @@ import com.intermodular.intro_backend.repository.NurseRepository;
 
 import jakarta.servlet.http.HttpSession;
 
-// 1. Enable Mockito extension
+// Enable Mockito extension
 @ExtendWith(MockitoExtension.class)
 class NurseControllerTest {
 
-    // 2. Mock dependencies
+    // Mock dependencies
     @Mock
     private NurseRepository nurseRepository;
 
@@ -34,18 +34,17 @@ class NurseControllerTest {
     private BCryptPasswordEncoder passwordEncoder;
 
     @Mock
-    private HttpSession session; // Mock session
+    private HttpSession session; 
 
-    // 3. Inject mocks into the controller
+    // Inject mocks into the controller
     @InjectMocks
     private NurseController nurseController;
 
     private Nurse sampleNurse;
 
-    // Runs before each test
+    // Create a sample nurse before each test
     @BeforeEach
     void setUp() {
-        // Create a sample nurse for tests
         sampleNurse = new Nurse();
         sampleNurse.setId(1);
         sampleNurse.setFirstName("Ana");
