@@ -11,13 +11,14 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
+import com.intermodular.intro_backend.NurseController.NurseRegisterRequest;
 import com.intermodular.intro_backend.repository.NurseRepository;
 
 import jakarta.servlet.http.HttpSession;
@@ -51,6 +52,89 @@ class NurseControllerTest {
         sampleNurse.setLastName("Lopez");
         sampleNurse.setEmail("ana.lopez@test.com");
         sampleNurse.setPassword("hashedPassword123");
+    }
+
+    // --- Register Tests ---
+
+    @Test
+    void testRegister_Success() {
+        // Arrange
+        // Use a valid password to pass validation
+        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "ValidPass123!");
+        
+        // Mock: email does NOT exist
+        when(nurseRepository.existsByEmailIgnoreCase("jon@test.com")).thenReturn(false);
+        // Mock: password encoding
+        when(passwordEncoder.encode("ValidPass123!")).thenReturn("hashedPass");
+        
+        // Mock: saving the new nurse returns an object with an ID
+        Nurse savedNurse = new Nurse();
+        savedNurse.setId(2);
+        savedNurse.setFirstName("Jon");
+        savedNurse.setLastName("Jina");
+        savedNurse.setEmail("jon@test.com");
+        when(nurseRepository.save(any(Nurse.class))).thenReturn(savedNurse);
+
+        // Act
+        ResponseEntity<?> response = nurseController.registerNurse(request);
+
+        // Assert
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        // Check that the response body contains the new ID
+        assertTrue(response.getBody().toString().contains("nurse_id=2"));
+        // Verify 'save' was called
+        verify(nurseRepository).save(any(Nurse.class));
+    }
+
+    @Test
+    void testRegister_Failed_EmailExists() {
+        // Arrange
+        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "ValidPass123!");
+        // Mock: email ALREADY exists
+        when(nurseRepository.existsByEmailIgnoreCase("jon@test.com")).thenReturn(true);
+
+        // Act
+        ResponseEntity<?> response = nurseController.registerNurse(request);
+
+        // Assert
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("El email ya existe"));
+        // Verify 'save' was never called
+        verify(nurseRepository, never()).save(any(Nurse.class));
+    }
+
+    @Test
+    void testRegister_Failed_InvalidEmail() {
+        // Arrange
+        // Use an invalid email
+        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "bad-email", "ValidPass123!");
+        // Mock: email does not exist (to pass the first check)
+        when(nurseRepository.existsByEmailIgnoreCase("bad-email")).thenReturn(false);
+
+        // Act
+        ResponseEntity<?> response = nurseController.registerNurse(request);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("Invalid parameters. Email must contain"));
+        verify(nurseRepository, never()).save(any(Nurse.class));
+    }
+
+    @Test
+    void testRegister_Failed_InvalidPassword() {
+        // Arrange
+        // Use an invalid (short) password
+        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "123");
+        // Mock: email does not exist
+        when(nurseRepository.existsByEmailIgnoreCase("jon@test.com")).thenReturn(false);
+
+        // Act
+        ResponseEntity<?> response = nurseController.registerNurse(request);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("Invalid parameters. Password must be at least 8 characters"));
+        verify(nurseRepository, never()).save(any(Nurse.class));
     }
 
     // --- Login Tests ---
@@ -151,6 +235,94 @@ class NurseControllerTest {
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
+    // --- Update Tests ---
+
+    @Test
+    void testUpdate_Success() {
+        // Arrange
+        Nurse updateRequest = new Nurse();
+        updateRequest.setFirstName("AnaUpdated");
+        updateRequest.setLastName("LopezUpdated");
+        updateRequest.setEmail("ana.updated@test.com");
+        updateRequest.setPassword("NewValidPass123!"); // Valid password
+
+        // Mock: find the existing nurse
+        when(nurseRepository.findById(1)).thenReturn(Optional.of(sampleNurse));
+        // Mock: password encoding
+        when(passwordEncoder.encode("NewValidPass123!")).thenReturn("newHashedPass");
+
+        // Act
+        ResponseEntity<Map<String, String>> response = nurseController.updateNurse(1, updateRequest);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Nurse with id: 1 successfully updated", response.getBody().get("Success"));
+        
+        // Verify 'save' was called
+        verify(nurseRepository).save(any(Nurse.class));
+        
+        // Optional: Verify the object was updated before saving
+        ArgumentCaptor<Nurse> nurseCaptor = ArgumentCaptor.forClass(Nurse.class);
+        verify(nurseRepository).save(nurseCaptor.capture());
+        assertEquals("AnaUpdated", nurseCaptor.getValue().getFirstName());
+        assertEquals("newHashedPass", nurseCaptor.getValue().getPassword());
+    }
+
+    @Test
+    void testUpdate_Failed_NotFound() {
+        // Arrange
+        Nurse updateRequest = new Nurse(); // Data doesn't matter
+        // Mock: repository finds nothing
+        when(nurseRepository.findById(99)).thenReturn(Optional.empty());
+
+        // Act
+        ResponseEntity<Map<String, String>> response = nurseController.updateNurse(99, updateRequest);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Nurse not found with id 99", response.getBody().get("Error"));
+        verify(nurseRepository, never()).save(any(Nurse.class));
+    }
+
+    @Test
+    void testUpdate_Failed_InvalidEmail() {
+        // Arrange
+        Nurse updateRequest = new Nurse();
+        updateRequest.setEmail("bad-email"); // Invalid email
+        updateRequest.setPassword("ValidPass123!");
+
+        // Mock: find the existing nurse
+        when(nurseRepository.findById(1)).thenReturn(Optional.of(sampleNurse));
+
+        // Act
+        ResponseEntity<Map<String, String>> response = nurseController.updateNurse(1, updateRequest);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("Invalid parameters. Email must contain"));
+        verify(nurseRepository, never()).save(any(Nurse.class));
+    }
+
+    @Test
+    void testUpdate_Failed_InvalidPassword() {
+        // Arrange
+        Nurse updateRequest = new Nurse();
+        updateRequest.setEmail("ana.updated@test.com");
+        updateRequest.setPassword("123"); // Invalid password
+
+        // Mock: find the existing nurse
+        when(nurseRepository.findById(1)).thenReturn(Optional.of(sampleNurse));
+
+        // Act
+        ResponseEntity<Map<String, String>> response = nurseController.updateNurse(1, updateRequest);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("Invalid parameters. Password must be at least 8 characters"));
+        verify(nurseRepository, never()).save(any(Nurse.class));
+    }
+
 
     // --- Delete Tests ---
 
