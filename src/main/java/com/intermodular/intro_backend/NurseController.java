@@ -149,7 +149,7 @@ public class NurseController {
         oldNurse.get().setFirstName(newNurse.getFirstName());
         oldNurse.get().setLastName(newNurse.getLastName());
         oldNurse.get().setEmail(newNurse.getEmail());
-        oldNurse.get().setPassword(newNurse.getPassword());
+        oldNurse.get().setPassword(passwordEncoder.encode(newNurse.getPassword()));
 
         nurseRepository.save(oldNurse.get());
         response.put("Success", "Nurse with id: " + id + " successfully updated");
