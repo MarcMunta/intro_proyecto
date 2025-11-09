@@ -1,4 +1,4 @@
-name: Integración continua
+name: CI - Maven (intro_proyecto)
 
 on:
   push:
@@ -11,15 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar el código
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Instalar Java
+      - name: Setup Java (Temurin)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
           cache: maven
 
-      - name: Compilar y ejecutar los tests
+
+      - name: Build & run tests (Maven)
         run: mvn -B clean test
+        env:
+          MAVEN_OPTS: "-Xmx1024m"
+
