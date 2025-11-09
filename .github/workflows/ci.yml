@@ -27,10 +27,3 @@ jobs:
         env:
           MAVEN_OPTS: "-Xmx1024m"
 
-
-      - name: Upload Surefire reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: surefire-reports
-          path: intro_proyecto/target/surefire-reports/**
