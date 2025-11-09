@@ -23,7 +23,7 @@ jobs:
 
 
       - name: Build & run tests (Maven)
-        run: mvn -B -f intro_proyecto/pom.xml clean test
+        run: mvn -B clean test
         env:
           MAVEN_OPTS: "-Xmx1024m"
 
