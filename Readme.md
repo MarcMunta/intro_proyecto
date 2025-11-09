@@ -34,9 +34,8 @@ git clone https://github.com/MarcMunta/intro_proyecto.git
 cd intro_proyecto
 ```
 
-### Usage (How to Run)
+### How to Run
 
-This project uses the Maven Wrapper (mvnw), so you don't need Maven installed globally.
 Run the application:
 ```
 # On macOS/Linux
@@ -58,13 +57,133 @@ Run the tests:
 ./mvnw.cmd clean test
 ```
 
-## API Endpoints
+## Uses / API Endpoints
 
-All endpoints use the `/nurse` prefix:
+All endpoints use the `/nurse` prefix.
 
-- **POST** `/nurse/register` → Registers a new nurse.
-- **POST** `/nurse/login` → Authenticates a nurse.
-- **GET** `/nurse/index` → Returns a list of all nurses.
-- **GET** `/nurse/{id}` → Returns a nurse by their ID.
-- **PUT** `/nurse/{id}` → Updates a nurse by their ID.
-- **DELETE** `/nurse/{id}` → Deletes a nurse by their ID.
+### **POST /nurse/register**
+**Description:** Registers a new nurse.
+
+**Requires JSON body:**
+```json
+{ 
+  "first_name": "...", 
+  "last_name": "...", 
+  "email": "...", 
+  "password": "..." 
+}
+```
+
+**Returns (201 Created):** The newly created nurse's information (password not included).  
+**Returns (Error):**
+- `409 Conflict` → The email already exists. Example:
+```
+{ "error": "El email ya existe" }
+```
+- `400 Bad Request` → Validation failed. Possible messages:
+```
+{ "Error": "Invalid parameters. Email must contain '@' and a valid domain (e.g., user@example.com)." }
+```
+or
+```
+{ "Error": "Invalid parameters. Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character." }
+```
+
+---
+
+### **POST /nurse/login**
+**Description:** Authenticates a nurse.
+
+**Requires (JSON Body):**
+```
+{ 
+  "email": "...", 
+  "password": "..." 
+}
+```
+
+**Returns (200 OK):**
+```
+{ 
+  "authenticated": true 
+}
+```
+
+**Returns (Error) `409 Conflict`:**
+```
+{ 
+  "authenticated": false 
+}
+```
+
+---
+
+### **GET /nurse/index**
+**Description:** Returns a list of all nurses.
+
+**Returns (200 OK):**
+```
+[
+  { ... },
+  { ... }
+]
+```
+
+---
+
+### **GET /nurse/{id}**
+**Description:** Returns a specific nurse by their ID.
+
+**Returns (200 OK):** A JSON object with nurse details.  
+**Returns (Error) `404 Not Found`:** The nurse with that ID does not exist.
+```
+{
+  "Error": "Nurse not found with id ..."
+}
+```
+
+---
+
+### **PUT /nurse/{id}**
+**Description:** Updates a nurse by their ID.
+
+**Requires (JSON Body):**
+```json
+{ 
+  "first_name": "...", 
+  "last_name": "...", 
+  "email": "...", 
+  "password": "..." 
+}
+```
+
+**Returns (200 OK):**
+```
+{ 
+  "Success": "Nurse with id: ... successfully updated" 
+}
+```
+
+**Returns (Error):**
+- `404 Not Found` → Nurse does not exist.
+- `400 Bad Request` → Validation issues.
+
+---
+
+### **DELETE /nurse/{id}**
+**Description:** Deletes a nurse by their ID.
+
+**Returns (200 OK):**
+```
+{ 
+  "Success": "Nurse successfully deleted with id ..." 
+}
+```
+
+**Returns (Error) `404 Not Found`:** The nurse with that ID does not exist.ç
+```
+{
+  "Error": "Nurse not found with id ..."
+}
+```
+
