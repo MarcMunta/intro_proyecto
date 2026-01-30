@@ -13,13 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.intermodular.intro_backend.repository.NurseRepository;
 
@@ -62,6 +55,7 @@ public class NurseController {
             newNurse.setLastName(request.last_name());
             newNurse.setEmail(request.email());
             newNurse.setPassword(passwordEncoder.encode(request.password()));
+            newNurse.setProfilePicture(request.profile_picture());
 
             Nurse savedNurse = nurseRepository.save(newNurse);
 
@@ -70,6 +64,7 @@ public class NurseController {
             nurseResponse.put("first_name", savedNurse.getFirstName());
             nurseResponse.put("last_name", savedNurse.getLastName());
             nurseResponse.put("email", savedNurse.getEmail());
+            nurseResponse.put("profile_picture", savedNurse.getProfilePicture());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(nurseResponse);
         } catch (Exception e) {
@@ -78,7 +73,7 @@ public class NurseController {
         }
     }
 
-    public record NurseRegisterRequest(String first_name, String last_name, String email, String password) {
+    public record NurseRegisterRequest(String first_name, String last_name, String email, String password, byte[] profile_picture) {
     }
 
     @PostMapping("/login")
@@ -121,6 +116,7 @@ public class NurseController {
                     result.put("last_name", nurse.getLastName());
                     result.put("email", nurse.getEmail());
                     result.put("password", nurse.getPassword());
+                    result.put("profile_picture", nurse.getProfilePicture());
                     return ResponseEntity.ok(result);
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -150,6 +146,7 @@ public class NurseController {
         oldNurse.get().setLastName(newNurse.getLastName());
         oldNurse.get().setEmail(newNurse.getEmail());
         oldNurse.get().setPassword(passwordEncoder.encode(newNurse.getPassword()));
+        oldNurse.get().setProfilePicture(newNurse.getProfilePicture());
 
         nurseRepository.save(oldNurse.get());
         response.put("Success", "Nurse with id: " + id + " successfully updated");

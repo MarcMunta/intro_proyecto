@@ -60,7 +60,7 @@ class NurseControllerTest {
     void testRegister_Success() {
         // Arrange
         // Use a valid password to pass validation
-        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "ValidPass123!");
+        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "ValidPass123!", new byte[1]);
         
         // Mock: email does NOT exist
         when(nurseRepository.existsByEmailIgnoreCase("jon@test.com")).thenReturn(false);
@@ -89,7 +89,7 @@ class NurseControllerTest {
     @Test
     void testRegister_Failed_EmailExists() {
         // Arrange
-        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "ValidPass123!");
+        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "ValidPass123!", new byte[1]);
         // Mock: email ALREADY exists
         when(nurseRepository.existsByEmailIgnoreCase("jon@test.com")).thenReturn(true);
 
@@ -107,7 +107,7 @@ class NurseControllerTest {
     void testRegister_Failed_InvalidEmail() {
         // Arrange
         // Use an invalid email
-        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "bad-email", "ValidPass123!");
+        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "bad-email", "ValidPass123!", new byte[1]);
         // Mock: email does not exist (to pass the first check)
         when(nurseRepository.existsByEmailIgnoreCase("bad-email")).thenReturn(false);
 
@@ -124,7 +124,7 @@ class NurseControllerTest {
     void testRegister_Failed_InvalidPassword() {
         // Arrange
         // Use an invalid (short) password
-        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "123");
+        NurseRegisterRequest request = new NurseRegisterRequest("Jon", "Jina", "jon@test.com", "123", new byte[1]);
         // Mock: email does not exist
         when(nurseRepository.existsByEmailIgnoreCase("jon@test.com")).thenReturn(false);
 

@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 @Entity
@@ -31,6 +32,11 @@ public class Nurse {
 
     @Column(name = "password", nullable = false)
     private String password;
+
+    @Lob 
+    @Column(name = "profile_picture", columnDefinition="BLOB") 
+    @JsonProperty("profile_picture")
+    private byte[] profilePicture;
 
     public Nurse() {}
 
@@ -60,6 +66,9 @@ public class Nurse {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public byte[] getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(byte[] profilePicture) { this.profilePicture = profilePicture; }
 
     @Override
     public String toString() {
