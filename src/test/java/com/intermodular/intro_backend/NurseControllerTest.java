@@ -149,7 +149,7 @@ class NurseControllerTest {
         when(passwordEncoder.matches("pass123", "hashedPassword123")).thenReturn(true);
 
         // Act (call the method)
-        ResponseEntity<Map<String, Boolean>> response = nurseController.login(loginRequest, session);
+        ResponseEntity<Map<String, Object>> response = nurseController.login(loginRequest, session);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -167,7 +167,7 @@ class NurseControllerTest {
         when(passwordEncoder.matches("wrong", "hashedPassword123")).thenReturn(false);
 
         // Act
-        ResponseEntity<Map<String, Boolean>> response = nurseController.login(loginRequest, session);
+        ResponseEntity<Map<String, Object>> response = nurseController.login(loginRequest, session);
 
         // Assert
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());

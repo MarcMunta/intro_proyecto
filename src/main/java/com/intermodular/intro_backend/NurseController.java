@@ -77,7 +77,7 @@ public class NurseController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Boolean>> login(@RequestBody Map<String, String> body, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> body, HttpSession session) {
         String email = body.get("email");
         String password = body.get("password");
         boolean authenticated = false;
@@ -91,10 +91,16 @@ public class NurseController {
             }
         }
 
-        Map<String, Boolean> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         response.put("authenticated", authenticated);
 
         if (authenticated) {
+            response.put("nurse_id", nurse.getId());
+            response.put("first_name", nurse.getFirstName());
+            response.put("last_name", nurse.getLastName());
+            response.put("email", nurse.getEmail());
+            response.put("profile_picture", nurse.getProfilePicture());
+
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
