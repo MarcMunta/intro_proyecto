@@ -34,7 +34,7 @@ public class Nurse {
     private String password;
 
     @Lob 
-    @Column(name = "profile_picture", columnDefinition="BLOB") 
+    @Column(name = "profile_picture", columnDefinition="LONGBLOB")
     @JsonProperty("profile_picture")
     private byte[] profilePicture;
 
@@ -48,7 +48,7 @@ public class Nurse {
         this.password = password;
     }
 
-    @JsonProperty("nurse_id")
+    @JsonProperty("id") 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

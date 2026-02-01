@@ -143,15 +143,17 @@ public class NurseController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        if (!validatePassword(newNurse.getPassword())) {
-            response.put("Error", "Invalid parameters. Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        if (!newNurse.getPassword().equals(oldNurse.get().getPassword())) {
+             if (!validatePassword(newNurse.getPassword())) {
+                response.put("Error", "Invalid parameters. Password must be at least 8 characters long...");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            oldNurse.get().setPassword(passwordEncoder.encode(newNurse.getPassword()));
         }
 
         oldNurse.get().setFirstName(newNurse.getFirstName());
         oldNurse.get().setLastName(newNurse.getLastName());
         oldNurse.get().setEmail(newNurse.getEmail());
-        oldNurse.get().setPassword(passwordEncoder.encode(newNurse.getPassword()));
         oldNurse.get().setProfilePicture(newNurse.getProfilePicture());
 
         nurseRepository.save(oldNurse.get());
